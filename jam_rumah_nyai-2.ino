@@ -1,40 +1,23 @@
 
 
 //SETUP DMD
-#define DISPLAYS_WIDE 2
-#define DISPLAYS_HIGH 2
-
-#if defined(ESP8266) || defined(ESP32)  // Jika menggunakan ESP8266 atau ESP32
-  #include <ESP8266WiFi.h>
-  #include <ESP8266WebServer.h>
-  #include <ESP8266mDNS.h>
-  #include <WiFiUdp.h>
-  #include <ArduinoOTA.h>
-  
-  #include <DMDESP.h>
-  #include <ESP_EEPROM.h>
-
-  DMDESP  Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  // Jumlah Panel P10 yang digunakan (KOLOM,BARIS)
-  
-  // Pengaturan hotspot WiFi dari ESP8266
-  char ssid[20]     = "JAM_PANEL_MUSHOLLAH";
-  char password[20] = "00000000";
-  const char* host = "OTA-PANEL";
-
-  ESP8266WebServer server(80);
-
-#else
-  #include <SPI.h>
-  #include <DMD3asis.h>
-  #include <avr/pgmspace.h>
-  #include <MemoryFree.h>
-  #include <EEPROM.h>
-  
-  DMD3 Disp(DISPLAYS_WIDE,DISPLAYS_HIGH);
-  
-#endif
+#define DISPLAYS_WIDE 1
+#define DISPLAYS_HIGH 1
 
 
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+//#include <ESP8266mDNS.h>
+
+#include <DMDESP.h>
+#include <ESP_EEPROM.h>
+DMDESP  Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  // Jumlah Panel P10 yang digunakan (KOLOM,BARIS)
+
+// Pengaturan hotspot WiFi dari ESP8266
+char ssid[20]     = "JAM_PANEL_MUSHOLLAH";
+char password[20] = "00000000";
+const char* host = "OTA-PANEL";
+ESP8266WebServer server(80);
 
 #include <Wire.h>
 #include <RtcDS3231.h>
@@ -43,20 +26,21 @@
 #include "PrayerTimes.h"
 
 
-#include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/SystemFont5x7.h>
-#include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/Font4x6.h>
-#include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/System4x7.h>
-#include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/SmallCap4x6.h>
-#include <C:\Users\irfan\Documents\Project\project-jam-jws(pro)\fonts/EMSans6x16.h>
+#include <C:\Users\irfan\Documents\Project\jam_rumah_nyai-2\fonts/SystemFont5x7.h>
+#include <C:\Users\irfan\Documents\Project\jam_rumah_nyai-2\fonts/Font4x6.h>
+#include <C:\Users\irfan\Documents\Project\jam_rumah_nyai-2\fonts/System4x7.h>
+#include <C:\Users\irfan\Documents\Project\jam_rumah_nyai-2\fonts/SmallCap4x6.h>
+#include <C:\Users\irfan\Documents\Project\jam_rumah_nyai-2\fonts/EMSans6x16.h>
 
 
-#define BUZZ  4//D4 // PIN BUZZER
+#define BUZZ  D4 // PIN BUZZER
 
 #define Font0 SystemFont5x7
 #define Font1 Font4x6
 #define Font2 System4x7 
 #define Font3 SmallCap4x6
 #define Font4 EMSans6x16
+
 
 // Ukuran EEPROM (pastikan cukup untuk semua data)
 #define EEPROM_SIZE 50
@@ -66,14 +50,14 @@ RtcDS3231<TwoWire> Rtc(Wire);
 RtcDateTime now;
 double times[sizeof(TimeName)/sizeof(char*)];
 
-uint8_t ihtiSholat[]    = {0,0,0,0,0};
+//uint8_t ihtiSholat[]    = {0,0,0,0,0};
 uint8_t iqomah[]        = {5,1,5,5,5,2,5};
 uint8_t displayBlink[]  = {5,0,5,5,5,5,5};
 uint8_t dataIhty[]      = {3,0,3,3,0,3,2};
 
 struct Config {
   uint8_t chijir;
-  uint8_t durasiadzan;
+  uint8_t durasiadzan = 40;
   uint8_t ihti;
   float latitude = -7.364057;
   float longitude = 112.646222;
@@ -123,13 +107,13 @@ Config config;
 
 
 // Variabel untuk waktu, tanggal, teks berjalan, tampilan ,dan kecerahan
-String setJam        = "00:00:00";
-String setTanggal    = "01-01-2024";
-String setText       = "Selamat Datang!";
-char info1[100];
-char info2[100];
-uint16_t    brightness    = 50;
+//String setJam        = "00:00:00";
+//String setTanggal    = "01-01-2024";
+//String setText       = "Selamat Datang!";
+// char info1[100];
+// char info2[100];
 char   text[200] ;
+uint16_t    brightness    = 100;
 bool   adzan         = 0;
 bool   stateBuzzer   = 1;
 uint8_t    DWidth        = Disp.width();
@@ -138,10 +122,7 @@ uint8_t    sholatNow     = -1;
 bool       reset_x       = 0; 
 
 /*======library tambahan=======*/
-//byte   tampilan      = 1;
-//byte   mode          = 1;
-uint8_t   list          = 0; 
-//bool   flag1         = 1;//variabel untuk menyimpan status animasi running text  
+bool flagAnim = false;
 uint8_t    speedDate      = 40; // Kecepatan default date
 uint8_t    speedText1     = 40; // Kecepatan default text  
 uint8_t     speedText2    = 40;
@@ -164,108 +145,96 @@ enum Show{
 
 Show show = ANIM_JAM;
 
+//----------------------web server---------------------------//
+void handleSetTime() {
+  Serial.println("hansle run");
+  
+}
+//=============================================================//
 
-#if defined(ESP8266) || defined(ESP32)
-  //----------------------------------------------------------------------
-  // HJS589 P10 FUNGSI TAMBAHAN UNTUK NODEMCU ESP8266
+//----------------------------------------------------------------------
+// HJS589 P10 FUNGSI TAMBAHAN UNTUK NODEMCU ESP8266
+
+void ICACHE_RAM_ATTR refresh() {
+  Disp.refresh();
+  timer0_write(ESP.getCycleCount() + 80000);
+}
+
+void Disp_init_esp() {
+  EEPROM.begin(EEPROM_SIZE);
+  Disp.start();
+  Disp.clear();
+  Disp.setBrightness(brightness);
+  Serial.println("Setup dmd selesai");
+
+  noInterrupts();
+  timer0_isr_init();
+  timer0_attachInterrupt(refresh);
+  timer0_write(ESP.getCycleCount() + 80000);
+  interrupts();
+}
+
+IPAddress local_IP(192, 168, 2, 1);      // IP Address untuk AP
+IPAddress gateway(192, 168, 2, 1);       // Gateway
+IPAddress subnet(255, 255, 255, 0);      // Subnet mask
+
+void AP_init() {
   
-  void ICACHE_RAM_ATTR refresh() {
-    Disp.refresh();
-    timer0_write(ESP.getCycleCount() + 80000);
-  }
+  WiFi.mode(WIFI_AP);
+  WiFi.softAPConfig(local_IP, gateway, subnet);
+  WiFi.softAP(ssid);
+  WiFi.setSleepMode(WIFI_NONE_SLEEP); // Pastikan WiFi tidak sleep
+
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);
+
+  server.on("/setTime", handleSetTime);
+  server.begin();
   
-  void Disp_init_esp() {
-    EEPROM.begin(EEPROM_SIZE);
-    Disp.start();
-    Disp.clear();
-    Disp.setBrightness(brightness);
-    Serial.println("Setup dmd selesai");
-  
-    noInterrupts();
-    timer0_isr_init();
-    timer0_attachInterrupt(refresh);
-    timer0_write(ESP.getCycleCount() + 80000);
-    interrupts();
-  }
-  
-  IPAddress local_IP(192, 168, 2, 1);      // IP Address untuk AP
-  IPAddress gateway(192, 168, 2, 1);       // Gateway
-  IPAddress subnet(255, 255, 255, 0);      // Subnet mask
-  
-  void AP_init() {
-    
-    WiFi.mode(WIFI_AP);
-    WiFi.softAPConfig(local_IP, gateway, subnet);
-    WiFi.softAP(ssid);
-    WiFi.setSleepMode(WIFI_NONE_SLEEP); // Pastikan WiFi tidak sleep
-  
-    IPAddress myIP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(myIP);
-    
-    ArduinoOTA.setHostname(host);
-     ArduinoOTA.onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH) {
-        type = "sketch";
-      } else {  // U_FS
-        type = "filesystem";
-      }
-  
-      // NOTE: if updating FS this would be the place to unmount FS using FS.end()
-      Serial.println("Start updating " + type);
-    });
-    ArduinoOTA.onEnd([]() {
-      Serial.println("\nEnd");
-    });
-    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    });
-    ArduinoOTA.onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) {
-        Serial.println("Auth Failed");
-      } else if (error == OTA_BEGIN_ERROR) {
-        Serial.println("Begin Failed");
-      } else if (error == OTA_CONNECT_ERROR) {
-        Serial.println("Connect Failed");
-      } else if (error == OTA_RECEIVE_ERROR) {
-        Serial.println("Receive Failed");
-      } else if (error == OTA_END_ERROR) {
-        Serial.println("End Failed");
-      }
-    });
-    ArduinoOTA.begin();
-    
-    Serial.println("Server dimulai.");  
-  }
-#else
-  // =========================================
-  // DMD3 P10 utility Function================
-  // =========================================
-  void Disp_init_arduino() 
-    { 
-      Disp.setDoubleBuffer(true);
-      Timer1.initialize(1500);
-      Timer1.attachInterrupt(scan);
-      setBrightness(200);
-      fType(1);  
-      Disp.clear();
-      Disp.swapBuffers();
+  /*ArduinoOTA.setHostname(host);
+   ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else {  // U_FS
+      type = "filesystem";
     }
 
-  void setBrightness(int bright)
-    { Timer1.pwm(9,bright);}
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+  ArduinoOTA.begin();
+  */
+  Serial.println("Server dimulai.");  
+}
 
-  void scan()
-    { Disp.refresh();}
-  
-#endif
+
 
 void setup() {
   Serial.begin(115200);
   pinMode(BUZZ, OUTPUT); 
-
+  digitalWrite(BUZZ,HIGH);
   int rtn = I2C_ClearBus(); // clear the I2C bus first before calling Wire.begin()
     if (rtn != 0) {
       Serial.println(F("I2C bus error. Could not clear"));
@@ -285,12 +254,8 @@ void setup() {
   Rtc.Enable32kHzPin(false);
   Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone); 
 
-#if defined(ESP8266) || defined(ESP32)
   Disp_init_esp();
-  AP_init();
-#else
-  Disp_init_arduino();
-#endif
+  //AP_init();
 
 JadwalSholat();
 
@@ -305,10 +270,33 @@ for(int i = 0; i < 4; i++)
 }
 
 void loop() {
-  getData();
+  
+  check();
+  islam();
+  
+  switch(show){
+    case ANIM_JAM :
+      runAnimasiJam();
+      drawDate();
+    break;
 
+    case ANIM_TEXT :
+      runAnimasiJam();
+      runningTextInfo();
+    break;
+
+    case ANIM_SHOLAT :
+       runAnimasiSholat();
+    break;
+
+    case ANIM_ADZAN :
+      drawAzzan();
+    break;
+  };
+  buzzerWarning();
+  yield();
 }
-
+/*
 void getData(){
   if (Serial.available()) {
         String input = Serial.readStringUntil('\n');
@@ -409,6 +397,8 @@ void getData(){
         }
     }
 }
+*/
+
 
  //----------------------------------------------------------------------
 // I2C_ClearBus menghindari gagal baca RTC (nilai 00 atau 165)
@@ -477,6 +467,22 @@ int I2C_ClearBus() {
   return 0; // all ok
 }
 
+void buzzerWarning(){
+
+   RtcDateTime now = Rtc.GetDateTime();
+   if(now.Hour() == 00 && now.Minute() == 00 && now.Second() <= 15){
+    static bool state;
+    static uint32_t save = 0;
+    uint32_t tmr = millis();
+
+    if(tmr - save > 2500){
+      save = tmr;
+      state = !state;
+      digitalWrite(BUZZ, state);
+    }  
+   }
+}
+
 void Buzzer(uint8_t state)
   {
     if(!stateBuzzer) return;
@@ -498,7 +504,7 @@ void Buzzer(uint8_t state)
       break;
     };
   }
-
+/*
   void parsingData(String data){
   // Data string
   //String data = "0.1234-111.2345-7";
@@ -543,4 +549,4 @@ void Buzzer(uint8_t state)
   }
 
   //Serial.println("\nParsing selesai di proses()");
-}
+}*/

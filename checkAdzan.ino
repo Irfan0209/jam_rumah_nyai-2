@@ -25,10 +25,9 @@ void check() {
             if (jam == hours && menit == minutes && detik == 0) {
                 Disp.clear();
                 sholatNow = counter;
-                adzan = 1;
-                reset_x = 1;
+//                adzan = 1;
+//                reset_x = 1;
                 show = ANIM_ADZAN;
-                list = 0;
                 adzanFlag[counter] = true;
             }
         }
