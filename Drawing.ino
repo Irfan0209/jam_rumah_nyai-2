@@ -78,7 +78,7 @@ void drawDate(){
 }
 
 }
-
+/*
 void runningTextInfo() {
   static uint16_t x = 0;
   static uint32_t lsRn;
@@ -111,10 +111,42 @@ void runningTextInfo() {
     Disp.drawText(posX, 9, msg_buffer);
     x++; // Geser teks ke kiri
   }
+}*/
+
+
+void runningTextInfo() {
+  static uint16_t x = 0;
+  static uint32_t lsRn;
+  uint32_t Tmr = millis();
+  uint8_t Speed = speedText1;
+  
+//  char msg_buffer[50]; // Pastikan cukup besar untuk teks
+//  strcpy_P(msg_buffer, msg1); // Ambil teks dari Flash
+  //String msg_buffer = text;
+  // Hitung panjang teks hanya sekali
+  static uint16_t fullScroll = 0;
+  if (fullScroll == 0) { 
+    fullScroll = Disp.textWidth(text) + Disp.width() + 250;
+  }
+
+  // Jalankan animasi scrolling berdasarkan millis()
+  if (Tmr - lsRn > Speed && flagAnim == false) { 
+    lsRn = Tmr;
+    fType(0);
+    
+    int posX = Disp.width() - x;
+    if (posX < -Disp.textWidth(text)) { // Cegah teks keluar layar
+      x = 0;
+      flagAnim = true;
+      fullScroll=0;
+      Disp.clear();
+      return;
+    }
+
+    Disp.drawText(posX, 9, text);
+    x++; // Geser teks ke kiri
+  }
 }
-
-
-
 
 
 
@@ -140,13 +172,13 @@ void animasiJadwalSholat(){
   static uint8_t    s=0; // 0=in, 1=out   
   static uint8_t    s1=0;
   
-  float sholatT[]={JWS.floatSubuh,JWS.floatDhuha,JWS.floatDzuhur,JWS.floatAshar,JWS.floatMaghrib,JWS.floatIsya};
+  float sholatT[]={JWS.floatSubuh,JWS.floatTerbit,JWS.floatDhuha,JWS.floatDzuhur,JWS.floatAshar,JWS.floatMaghrib,JWS.floatIsya};
   if(list != lastList){s=0; s1=0; x=0; y=0;lastList = list; }
 
   static uint32_t   lsRn;
   uint32_t          Tmr = millis(); 
   
-  const char *jadwal[] = {"SUBUH","DHUHA", "DZUHUR", "ASHAR", "MAGRIB","ISYA'"};
+  const char *jadwal[] = {"SUBUH","TERBIT","DHUHA", "DZUHUR", "ASHAR", "MAGRIB","ISYA'"};
   char buff_jam[10];
 
   if((Tmr-lsRn)>55) 
@@ -164,7 +196,7 @@ void animasiJadwalSholat(){
     y=0;
     list++; 
     //Serial.println(config.latitude,6);
-    if(list==6){list=0; Disp.clear(); show=ANIM_JAM; }
+    if(list==7){list=0; Disp.clear(); show=ANIM_JAM; }
   }
 
   float stime = sholatT[list];

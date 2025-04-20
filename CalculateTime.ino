@@ -5,7 +5,12 @@ void islam() {
 
   JWS.Update(config.zonawaktu, config.latitude, config.longitude, config.altitude, now.Year(), now.Month(), now.Day()); // Jalankan fungsi ini untuk update jadwal sholat
   Hijir.Update(now.Year(), now.Month(), now.Day(), config.Correction);
-  dataIhty
+  JWS.setIkhtiSu = dataIhty[0];
+  JWS.setIkhtiDzu = dataIhty[1];
+  JWS.setIkhtiAs = dataIhty[2];
+  JWS.setIkhtiMa = dataIhty[3];
+  JWS.setIkhtiIs = dataIhty[4];
+  
 }
 
 // digunakan untuk menghitung hari pasaran

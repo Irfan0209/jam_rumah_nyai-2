@@ -14,7 +14,7 @@
 DMDESP  Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  // Jumlah Panel P10 yang digunakan (KOLOM,BARIS)
 
 // Pengaturan hotspot WiFi dari ESP8266
-char ssid[20]     = "JAM_PANEL_MUSHOLLAH";
+char ssid[20]     = "JAM_PANEL_1";
 char password[20] = "00000000";
 const char* host = "OTA-PANEL";
 ESP8266WebServer server(80);
@@ -44,14 +44,14 @@ ESP8266WebServer server(80);
 //create object
 RtcDS3231<TwoWire> Rtc(Wire);
 RtcDateTime now;
-//double times[sizeof(TimeName)/sizeof(char*)];
+
 // Constractor
 Prayer JWS;
 Hijriyah Hijir;
 
 uint8_t iqomah[]        = {5,1,5,5,5,2,5};
 uint8_t displayBlink[]  = {5,0,5,5,5,5,5};
-uint8_t dataIhty[]      = {3,0,3,3,0,3,2};
+uint8_t dataIhty[]      = {3,0,3,3,0,3};
 
 struct Config {
   uint8_t durasiadzan = 40;
@@ -67,15 +67,10 @@ Config config;
 
 
 // Variabel untuk waktu, tanggal, teks berjalan, tampilan ,dan kecerahan
-//String setJam        = "00:00:00";
-//String setTanggal    = "01-01-2024";
-//String setText       = "Selamat Datang!";
-// char info1[100];
-// char info2[100];
-char   text[200] ;
-uint16_t    brightness    = 100;
-bool   adzan         = 0;
-bool   stateBuzzer   = 1;
+char   text[100];
+uint16_t   brightness    = 100;
+bool       adzan         = 0;
+bool       stateBuzzer   = 1;
 uint8_t    DWidth        = Disp.width();
 uint8_t    DHeight       = Disp.height();
 uint8_t    sholatNow     = -1;
@@ -85,11 +80,12 @@ bool       reset_x       = 0;
 bool flagAnim = false;
 uint8_t    speedDate      = 40; // Kecepatan default date
 uint8_t    speedText1     = 40; // Kecepatan default text  
-uint8_t    speedText2    = 40;
-float dataFloat[10];
-int   dataInteger[10];
-uint8_t indexText;
-uint8_t list,lastList;
+uint8_t    speedText2     = 40;
+float      dataFloat[10];
+int        dataInteger[10];
+uint8_t    indexText;
+uint8_t    list,lastList;
+//bool MODE=false;
 /*============== end ================*/
 
 enum Show{
@@ -307,7 +303,7 @@ void AP_init() {
   
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(local_IP, gateway, subnet);
-  WiFi.softAP(ssid);
+  WiFi.softAP(ssid,password);
   WiFi.setSleepMode(WIFI_NONE_SLEEP); // Pastikan WiFi tidak sleep
 
   IPAddress myIP = WiFi.softAPIP();
@@ -325,7 +321,7 @@ void AP_init() {
 void setup() {
   Serial.begin(115200);
   EEPROM.begin(EEPROM_SIZE);
-  loadFromEEPROM();
+  
   pinMode(BUZZ, OUTPUT); 
   digitalWrite(BUZZ,HIGH);
   int rtn = I2C_ClearBus(); // clear the I2C bus first before calling Wire.begin()
@@ -345,10 +341,12 @@ void setup() {
   
   Rtc.Begin();
   Rtc.Enable32kHzPin(false);
-  Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone); 
+  Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
+  loadFromEEPROM();
+  delay(100);
   Disp_init_esp();
   AP_init();
-
+  
 for(int i = 0; i < 4; i++)
  {
       Buzzer(1);
@@ -416,6 +414,8 @@ void getData(String input) {
       value = value.substring(0, 100); // Batasi 100 karakter
       value.toCharArray(text, value.length() + 1);
       saveStringToEEPROM(ADDR_TEXT, value, 100);
+      delay(500);
+      ESP.restart();
     }
 
     else if (key == "Br") {
@@ -478,18 +478,18 @@ void getData(String input) {
       EEPROM.write(ADDR_IHTY + indexSholat, indexKoreksi);
     }
 
-   else if (key == "Da") {
-  config.durasiadzan = value.toInt();
-  EEPROM.write(ADDR_DURASIADZAN, config.durasiadzan & 0xFF);
-  EEPROM.write(ADDR_DURASIADZAN + 1, (config.durasiadzan >> 8) & 0xFF);
-  //EEPROM.commit();
-}
+    else if (key == "Da") {
+      config.durasiadzan = value.toInt();
+      EEPROM.write(ADDR_DURASIADZAN, config.durasiadzan & 0xFF);
+      EEPROM.write(ADDR_DURASIADZAN + 1, (config.durasiadzan >> 8) & 0xFF);
+      //EEPROM.commit();
+    }
 
-else if (key == "CoHi") {
-  config.Correction = value.toInt();
-  EEPROM.write(ADDR_CORRECTION, config.Correction & 0xFF);
-  EEPROM.write(ADDR_CORRECTION + 1, (config.Correction >> 8) & 0xFF);
-  //EEPROM.commit();
+    else if (key == "CoHi") {
+      config.Correction = value.toInt();
+      EEPROM.write(ADDR_CORRECTION, config.Correction & 0xFF);
+      EEPROM.write(ADDR_CORRECTION + 1, (config.Correction >> 8) & 0xFF);
+      //EEPROM.commit();
 }
 
 
@@ -503,6 +503,8 @@ else if (key == "CoHi") {
         value.toCharArray(password, value.length() + 1);
         saveStringToEEPROM(ADDR_PASSWORD, value, 8);
         server.send(200, "text/plain", "Password WiFi diupdate");
+        delay(500);
+        ESP.restart();
       }
     }
 
