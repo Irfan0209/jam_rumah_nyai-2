@@ -23,7 +23,7 @@ ESP8266WebServer server(80);
 #include <RtcDS3231.h>
 
 
-#include "PrayerTimes.h"
+#include <Prayer.h>//#include "PrayerTimes.h"
 
 
 #include <C:\Users\irfan\Documents\Project\jam_rumah_nyai-2\fonts/SystemFont5x7.h>
@@ -48,7 +48,10 @@ ESP8266WebServer server(80);
 //create object
 RtcDS3231<TwoWire> Rtc(Wire);
 RtcDateTime now;
-double times[sizeof(TimeName)/sizeof(char*)];
+//double times[sizeof(TimeName)/sizeof(char*)];
+// Constractor
+Prayer JWS;
+Hijriyah Hijir;
 
 //uint8_t ihtiSholat[]    = {0,0,0,0,0};
 uint8_t iqomah[]        = {5,1,5,5,5,2,5};
@@ -58,50 +61,13 @@ uint8_t dataIhty[]      = {3,0,3,3,0,3,2};
 struct Config {
   uint8_t chijir;
   uint8_t durasiadzan = 40;
-  uint8_t ihti;
+  uint8_t altitude = 10;
   float latitude = -7.364057;
   float longitude = 112.646222;
   uint8_t zonawaktu = 7;
+  int16_t Correction = -1; //Koreksi tanggal hijriyah, -1 untuk mengurangi, 0 tanpa koreksi, 1 untuk menambah
 };
 
-
-struct TanggalDanWaktu
-{
-  uint8_t detik;
-  uint8_t menit;
-  uint8_t jam;
-  uint8_t hari;
-  uint8_t tanggal;
-  uint8_t bulan;
-  uint8_t tahun;
-};
-
-struct Tanggal
-{
-  uint8_t tanggal;
-  uint8_t bulan;
-  uint16_t tahun;
-};
-
-struct TanggalJawa
-{
-  uint8_t pasaran;
-  uint8_t wuku;
-  uint8_t tanggal;
-  uint8_t bulan;
-  uint16_t tahun;
-};
-
-struct JamDanMenit
-{
-  uint8_t jam;
-  uint8_t menit;
-};
-
-TanggalDanWaktu tanggalMasehi;
-Tanggal tanggalHijriah;
-TanggalJawa tanggalJawa;
-JamDanMenit waktuMagrib;
 Config config;
 
 
@@ -257,7 +223,7 @@ void setup() {
   Disp_init_esp();
   //AP_init();
 
-JadwalSholat();
+//JadwalSholat();
 
 for(int i = 0; i < 4; i++)
  {

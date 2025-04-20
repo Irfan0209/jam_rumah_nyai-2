@@ -1,4 +1,4 @@
-5//const char msg[] PROGMEM = "MUSHOLLAH HIDAYATULLAH RT19/RW03,DODOKAN,TANJUNGSARI";
+//const char msg[] PROGMEM = "MUSHOLLAH HIDAYATULLAH RT19/RW03,DODOKAN,TANJUNGSARI";
 const char * const pasar[] PROGMEM = {"WAGE", "KLIWON", "LEGI", "PAHING", "PON"}; 
 const char * const Hari[] PROGMEM = {"MINGGU","SENIN","SELASA","RABU","KAMIS","JUM'AT","SABTU"};
 const char * const bulanMasehi[] PROGMEM = {"JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER" };
@@ -10,10 +10,10 @@ const char * const namaBulanHijriah[] PROGMEM = {
     "SYA'BAN", "RAMADHAN", "SYAWAL",
     "DZULQA'DAH", "DZULHIJAH"
 };
-const char jadwal[][8] PROGMEM = {
-    "SUBUH ", "TERBIT ", "DZUHUR ", "ASHAR ", 
-    "TRBNM ", "MAGRIB ", "ISYA' "
-  };
+//const char jadwal[][8] PROGMEM = {
+//    "SUBUH ", "TERBIT ", "DZUHUR ", "ASHAR ", 
+//    "TRBNM ", "MAGRIB ", "ISYA' "
+//  };
 
 
 //================= tampilan animasi ==================//
@@ -59,7 +59,7 @@ void drawDate(){
   char buff_date[100]; // Pastikan ukuran buffer cukup besar
     snprintf(buff_date,sizeof(buff_date), "%s %s %02d %s %04d %02d %s %04dH",
     Hari[daynow], pasar[jumlahhari() % 5], now.Day(), bulanMasehi[now.Month()-1], now.Year(),
-    tanggalHijriah.tanggal, namaBulanHijriah[tanggalHijriah.bulan - 1], tanggalHijriah.tahun);
+    Hijir.getHijriyahDate, namaBulanHijriah[Hijir.getHijriyahMonth - 1], Hijir.getHijriyahYear);
 
   
   if (fullScroll == 0) { // Hitung hanya sekali
@@ -120,20 +120,17 @@ void runAnimasiSholat(){
   RtcDateTime now = Rtc.GetDateTime();
   static int        y=0;
   static int        x=0;
-  static uint8_t       s=0; // 0=in, 1=out   
-  static uint8_t       s1=0;
+  static uint8_t    s=0; // 0=in, 1=out   
+  static uint8_t    s1=0;
   static uint8_t list,lastList;
-
+  
+  float sholatT[]={JWS.floatSubuh,JWS.floatDhuha,JWS.floatDzuhur,JWS.floatAshar,JWS.floatMaghrib,JWS.floatIsya};
   if(list != lastList){s=0; s1=0; x=0; y=0;lastList = list; }
 
   static uint32_t   lsRn;
   uint32_t          Tmr = millis(); 
   
-  const char *jadwal[] = {"SUBUH", "TERBIT", "DZUHUR", "ASHAR", "TRBNM", "MAGRIB", "ISYA'"};
-  int hours, minutes;
-  uint16_t tahun = now.Year();
-  uint8_t bulan = now.Month();
-  uint8_t tanggal = now.Day();
+  const char *jadwal[] = {"SUBUH","DHUHA", "DZUHUR", "ASHAR", "MAGRIB","ISYA'"};
   char buff_jam[10];
 
   if((Tmr-lsRn)>55) 
@@ -149,29 +146,20 @@ void runAnimasiSholat(){
     s1=0;
     x=0;
     y=0;
-     
     list++; 
-    if(list==4){list=5;} 
-    
-    if(list==7){list=0; Disp.clear(); show=ANIM_JAM; }//else{list=list;}
+    if(list==6){list=0; Disp.clear(); show=ANIM_JAM; }
   }
 
-  String sholat = jadwal[list];
+  float stime = sholatT[list];
+  uint8_t shour = floor(stime);
+  uint8_t sminute = floor((stime - (float)shour) * 60);
+  uint8_t ssecond = floor((stime - (float)shour - (float)sminute / 60) * 3600);
 
-  get_float_time_parts(times[list], hours, minutes);
-
-    //minutes = minutes + config.ihti;
-    minutes += dataIhty[list];
-  if(minutes >= 60) {
-      minutes = minutes - 60;
-      hours ++;
-  }
-
-  sprintf(buff_jam,"%02d:%02d",hours,minutes);
+  sprintf(buff_jam, "%02d:%02d", shour, sminute);
 
   if(s1==0){
     fType(3);
-    dwCtr(0,y-9, sholat);
+    dwCtr(0,y-9, jadwal[list]);
     fType(0);
     dwCtr(0,18-y, buff_jam);
   }
@@ -196,7 +184,7 @@ void runAnimasiSholat(){
 
 
 //======================= end ==========================//
-
+/*
 //==================== tampilkan jadwal sholat ====================//
 void jadwalSholat(){
  
@@ -216,10 +204,10 @@ void jadwalSholat(){
   // Ambil nama sholat dari Flash
   strcpy_P(sholat, jadwal[list]);
   
-  int hours, minutes;
-  uint16_t tahun = now.Year();
-  uint8_t bulan = now.Month();
-  uint8_t tanggal = now.Day();
+//  int hours, minutes;
+//  uint16_t tahun = now.Year();
+//  uint8_t bulan = now.Month();
+//  uint8_t tanggal = now.Day();
 
     if((Tmr-lsRn)>55) 
       { 
@@ -233,21 +221,27 @@ void jadwalSholat(){
     s = 0;
     list++; 
     if (list == 4) list = 5;  
-    if (list == 7) list = 0;
-    if(list == 0){ JadwalSholat(); }
+    if (list == 8) list = 0;
+    if(list == 0){ islam(); }
   }
 
-  // Ambil nama sholat dari Flash
-  strcpy_P(sholat, jadwal[list]);
+//  // Ambil nama sholat dari Flash
+//  strcpy_P(sholat, jadwal[list]);
+//
+//  get_float_time_parts(times[list], hours, minutes);
+//
+//  minutes = minutes + dataIhty[list];
+//
+//  if (minutes >= 60) { minutes -= 60; hours++; }
+ 
+    float stime = sholatT[list];
+    uint8_t shour = floor(stime);
+    uint8_t sminute = floor((stime - (float)shour) * 60);
+    uint8_t ssecond = floor((stime - (float)shour - (float)sminute / 60) * 3600);
 
-  get_float_time_parts(times[list], hours, minutes);
-
-  minutes = minutes + dataIhty[list];
-
-  if (minutes >= 60) { minutes -= 60; hours++; }
 
   // Format HH:MM
-  sprintf(buff_jam, "%02d:%02d", hours, minutes);
+  sprintf(buff_jam, "%02d:%02d", shour, sminute);
 
   // Tampilkan teks dengan animasi
   fType(3);
@@ -259,11 +253,11 @@ void jadwalSholat(){
   Disp.drawRect(67 - x - 1, 17, 67 - x - 1, 23, 0);
 }
 //=========================================================================//
-  
+*/ 
 /*======================= animasi memasuki waktu sholat ====================================*/
 void drawAzzan()
 {
-    static const char *jadwal[] = {"SUBUH", "TERBIT", "DZUHUR", "ASHAR", "TRBNM", "MAGRIB", "ISYA'"};
+    static const char *jadwal[] = {"SUBUH", "DZUHUR", "ASHAR", "MAGRIB","ISYA'"};
     const char *sholat = jadwal[sholatNow]; 
     static uint8_t ct = 0;
     static uint32_t lsRn = 0;
@@ -276,9 +270,9 @@ void drawAzzan()
         if (!(ct & 1))  // Lebih cepat dibandingkan ct % 2 == 0
         {
             fType(0);
-            Disp.drawText(1, 0, "ADZAN");
+            dwCtr(1, 0, "ADZAN");
             fType(3);
-            Disp.drawText(1, 9, sholat);
+            dwCtr(1, 9, sholat);
             Buzzer(1);
         }
         else
