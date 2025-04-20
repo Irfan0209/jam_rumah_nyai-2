@@ -1,6 +1,6 @@
-//const char msg[] PROGMEM = "MUSHOLLAH HIDAYATULLAH RT19/RW03,DODOKAN,TANJUNGSARI";
+5//const char msg[] PROGMEM = "MUSHOLLAH HIDAYATULLAH RT19/RW03,DODOKAN,TANJUNGSARI";
 const char * const pasar[] PROGMEM = {"WAGE", "KLIWON", "LEGI", "PAHING", "PON"}; 
-const char * const Hari[] PROGMEM = {"AHAD","SENIN","SELASA","RABU","KAMIS","JUM'AT","SABTU"};
+const char * const Hari[] PROGMEM = {"MINGGU","SENIN","SELASA","RABU","KAMIS","JUM'AT","SABTU"};
 const char * const bulanMasehi[] PROGMEM = {"JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER" };
 const char msg1[] PROGMEM ="SAIPUL,SANIYAH,MUSY'IROH,ACHMAD";
 const char * const namaBulanHijriah[] PROGMEM = {
