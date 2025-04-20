@@ -35,9 +35,6 @@ void check() {
         if (jam != hours || menit != minutes) {
             adzanFlag[counter] = false;
         }
-
-//        Serial.println(String(hours) + " : " + String(minutes));
-        
         counter = (counter + 1) % 5;
     }
 }

@@ -43,7 +43,7 @@ void runAnimasiJam(){
   
   fType(0); 
   dwCtr(0,y-9, buff_jam); 
-  //Serial.println("dot:" + String(dot));
+
 }
 
 void drawDate(){
@@ -85,9 +85,9 @@ void runningTextInfo() {
   uint32_t Tmr = millis();
   uint8_t Speed = speedText1;
   
-  char msg_buffer[50]; // Pastikan cukup besar untuk teks
-  strcpy_P(msg_buffer, msg1); // Ambil teks dari Flash
-
+//  char msg_buffer[50]; // Pastikan cukup besar untuk teks
+//  strcpy_P(msg_buffer, msg1); // Ambil teks dari Flash
+  String msg_buffer = text;
   // Hitung panjang teks hanya sekali
   static uint16_t fullScroll = 0;
   if (fullScroll == 0) { 
@@ -114,15 +114,31 @@ void runningTextInfo() {
 }
 
 
-void runAnimasiSholat(){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//======================= end ==========================//
+
+//==================== tampilkan jadwal sholat ====================//
+void animasiJadwalSholat(){
  
-  //if(adzan) return;
   RtcDateTime now = Rtc.GetDateTime();
   static int        y=0;
   static int        x=0;
   static uint8_t    s=0; // 0=in, 1=out   
   static uint8_t    s1=0;
-  //static uint8_t list,lastList;
   
   float sholatT[]={JWS.floatSubuh,JWS.floatDhuha,JWS.floatDzuhur,JWS.floatAshar,JWS.floatMaghrib,JWS.floatIsya};
   if(list != lastList){s=0; s1=0; x=0; y=0;lastList = list; }
@@ -147,6 +163,7 @@ void runAnimasiSholat(){
     x=0;
     y=0;
     list++; 
+    //Serial.println(config.latitude,6);
     if(list==6){list=0; Disp.clear(); show=ANIM_JAM; }
   }
 
@@ -169,91 +186,8 @@ void runAnimasiSholat(){
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//======================= end ==========================//
-/*
-//==================== tampilkan jadwal sholat ====================//
-void jadwalSholat(){
- 
-//if (adzan) return;
-
-  RtcDateTime now = Rtc.GetDateTime();
-  static int x = 0;
-  static byte s = 0; // 0 = masuk, 1 = keluar
-  static uint8_t    list;
-  static uint32_t   lsRn;
-  uint32_t          Tmr = millis(); 
-
-  //int hours, minutes;
-  char buff_jam[6]; // Format HH:MM hanya butuh 6 karakter
-  char sholat[8];   // Buffer untuk menyimpan nama sholat dari PROGMEM
-
-  // Ambil nama sholat dari Flash
-  strcpy_P(sholat, jadwal[list]);
-  
-//  int hours, minutes;
-//  uint16_t tahun = now.Year();
-//  uint8_t bulan = now.Month();
-//  uint8_t tanggal = now.Day();
-
-    if((Tmr-lsRn)>55) 
-      { 
-        if(s==0 and x<33){lsRn=Tmr; x++; }
-        if(s==1 and x>0){lsRn=Tmr;x--; }
-      }
-
-   if((Tmr-lsRn)>1500 and x ==33) {s=1;}
-
-   if (x == 0 && s == 1) { 
-    s = 0;
-    list++; 
-    if (list == 4) list = 5;  
-    if (list == 8) list = 0;
-    if(list == 0){ islam(); }
-  }
-
-//  // Ambil nama sholat dari Flash
-//  strcpy_P(sholat, jadwal[list]);
-//
-//  get_float_time_parts(times[list], hours, minutes);
-//
-//  minutes = minutes + dataIhty[list];
-//
-//  if (minutes >= 60) { minutes -= 60; hours++; }
- 
-    float stime = sholatT[list];
-    uint8_t shour = floor(stime);
-    uint8_t sminute = floor((stime - (float)shour) * 60);
-    uint8_t ssecond = floor((stime - (float)shour - (float)sminute / 60) * 3600);
-
-
-  // Format HH:MM
-  sprintf(buff_jam, "%02d:%02d", shour, sminute);
-
-  // Tampilkan teks dengan animasi
-  fType(3);
-  Disp.drawText(-33 + x, 17, sholat);
-  Disp.drawRect(-33 + x + 29, 17, -33 + x + 29, 23, 0);
-
-  fType(0);
-  Disp.drawText(67 - x, 17, buff_jam);
-  Disp.drawRect(67 - x - 1, 17, 67 - x - 1, 23, 0);
-}
 //=========================================================================//
-*/ 
+ 
 /*======================= animasi memasuki waktu sholat ====================================*/
 void drawAzzan()
 {
