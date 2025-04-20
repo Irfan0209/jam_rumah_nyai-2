@@ -25,6 +25,8 @@ void check() {
                 sholatNow = counter;
 //                adzan = 1;
 //                reset_x = 1;
+                list = 0;
+                lastList = 0;
                 show = ANIM_ADZAN;
                 adzanFlag[counter] = true;
             }

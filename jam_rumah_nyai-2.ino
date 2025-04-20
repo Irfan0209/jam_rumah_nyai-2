@@ -95,7 +95,7 @@ uint8_t     speedText2    = 40;
 float dataFloat[10];
 int   dataInteger[10];
 uint8_t indexText;
-
+uint8_t list,lastList;
 /*============== end ================*/
 
 enum Show{
@@ -112,10 +112,86 @@ enum Show{
 Show show = ANIM_JAM;
 
 //----------------------web server---------------------------//
+// Fungsi untuk mengatur jam, tanggal, running text, dan kecerahan
 void handleSetTime() {
   Serial.println("hansle run");
+  //static int flag = 0;
+  String data;
+  //Buzzer(1);
+  if (server.hasArg("Tm")) {
+    data = server.arg("Tm");
+    Serial.println("setJam:" + data);
+    getData(data);
+    server.send(200, "text/plain", "Settingan jam berhasil diupdate");
+  }
+  if (server.hasArg("text")) {
+    data = server.arg("text");
+    getData(data);
+    server.send(200, "text/plain", "Settingan nama berhasil diupdate");
+  }
   
-}
+  if (server.hasArg("Br")) {
+    data  = server.arg("Br");
+    Serial.println("brightness:" + data);
+    getData(data);
+    server.send(200, "text/plain", "Kecerahan berhasil diupdate");
+  }
+  if (server.hasArg("Spdt")) {
+    data = server.arg("Spdt"); // Atur kecepatan date
+    Serial.println("speed date:" + data);
+    getData(data);
+    server.send(200, "text/plain", "Kecepatan kalender berhasil diupdate");
+  }
+  if (server.hasArg("Sptx")) {
+    data = server.arg("Sptx"); // Atur kecepatan text
+    Serial.println("speed text:" + data);
+    getData(data);
+    server.send(200, "text/plain", "Kecepatan nama berhasil diupdate");
+  }
+  if (server.hasArg("Iq")) {
+    data = server.arg("Iq"); // Atur koreksi iqomah
+    Serial.println(String() + "Iq:" + data);
+    getData(data)
+    server.send(200, "text/plain", "iqomah diupdate");
+  }
+  if (server.hasArg("Dy")) {
+    data = server.arg("Dy"); // Atur durasi adzan
+    Serial.println(String() + "displayBlink:" + data);
+    getData(data);
+    server.send(200, "text/plain", "displayBlink diupdate");
+  }
+  if (server.hasArg("Kr")) {
+    data = server.arg("Kr"); // Atur koreksi waktu jadwal sholat
+    Serial.println(String() + "koreksi jadwal:" + data);
+    getData(data);
+    server.send(200, "text/plain", "Selisih jadwal sholat diupdate");
+  }
+  if (server.hasArg("Lk")) {
+    data = server.arg("Lk"); // Atur latitude
+    Serial.println(String() + "lokasi:" + data;
+    getData(data);
+    server.send(200, "text/plain", "lokasi diupdate");
+  }
+
+  if (server.hasArg("Bzr")) {
+    data = server.arg("Bzr"); // Atur status buzzer
+    data = "Bzr=" + data;
+    Serial.println(data);
+    getData(data);
+    server.send(200, "text/plain", (stateBuzzer) ? "Suara Diaktifkan" : "Suara Dimatikan");
+  }
+  if (server.hasArg("status")) {
+    server.send(200, "text/plain", "CONNECTED");
+  }
+   /////////////////
+  if (server.hasArg("newPassword")) {
+      data = server.arg("newPassword");
+      getData(data);
+      server.send(200, "text/plain", "Password WiFi diupdate");
+    } 
+  data="";
+  }
+  
 //=============================================================//
 
 //----------------------------------------------------------------------
@@ -158,40 +234,6 @@ void AP_init() {
   server.on("/setTime", handleSetTime);
   server.begin();
   
-  /*ArduinoOTA.setHostname(host);
-   ArduinoOTA.onStart([]() {
-    String type;
-    if (ArduinoOTA.getCommand() == U_FLASH) {
-      type = "sketch";
-    } else {  // U_FS
-      type = "filesystem";
-    }
-
-    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
-    Serial.println("Start updating " + type);
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
-    }
-  });
-  ArduinoOTA.begin();
-  */
   Serial.println("Server dimulai.");  
 }
 
@@ -219,11 +261,10 @@ void setup() {
   Rtc.Begin();
   Rtc.Enable32kHzPin(false);
   Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone); 
-
+  //RtcDateTime now = Rtc.GetDateTime();
   Disp_init_esp();
-  //AP_init();
-
-//JadwalSholat();
+  AP_init();
+  //Rtc.SetDateTime(RtcDateTime(now.Year(), now.Month(), now.Day(), 04, 13, 00));
 
 for(int i = 0; i < 4; i++)
  {
@@ -239,7 +280,7 @@ void loop() {
   
   check();
   islam();
-  
+  server.handleClient();
   switch(show){
     case ANIM_JAM :
       runAnimasiJam();
@@ -262,11 +303,11 @@ void loop() {
   buzzerWarning();
   yield();
 }
-/*
-void getData(){
-  if (Serial.available()) {
-        String input = Serial.readStringUntil('\n');
-        input.trim();
+
+void getData(String input){
+//  if (Serial.available()) {
+//        String input = Serial.readStringUntil('\n');
+//        input.trim();
         
         int eq = input.indexOf('=');
         if (eq != -1) {
@@ -361,9 +402,9 @@ void getData(){
             }
           }
         }
-    }
+    
 }
-*/
+
 
 
  //----------------------------------------------------------------------
@@ -470,7 +511,7 @@ void Buzzer(uint8_t state)
       break;
     };
   }
-/*
+
   void parsingData(String data){
   // Data string
   //String data = "0.1234-111.2345-7";
@@ -515,4 +556,4 @@ void Buzzer(uint8_t state)
   }
 
   //Serial.println("\nParsing selesai di proses()");
-}*/
+}

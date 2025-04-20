@@ -122,7 +122,7 @@ void runAnimasiSholat(){
   static int        x=0;
   static uint8_t    s=0; // 0=in, 1=out   
   static uint8_t    s1=0;
-  static uint8_t list,lastList;
+  //static uint8_t list,lastList;
   
   float sholatT[]={JWS.floatSubuh,JWS.floatDhuha,JWS.floatDzuhur,JWS.floatAshar,JWS.floatMaghrib,JWS.floatIsya};
   if(list != lastList){s=0; s1=0; x=0; y=0;lastList = list; }
