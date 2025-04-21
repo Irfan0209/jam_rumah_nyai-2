@@ -67,7 +67,7 @@ Config config;
 
 
 // Variabel untuk waktu, tanggal, teks berjalan, tampilan ,dan kecerahan
-char   text[100];
+char text1[101], text2[101];
 uint16_t   brightness    = 100;
 bool       adzan         = 0;
 bool       stateBuzzer   = 1;
@@ -104,6 +104,7 @@ Show show = ANIM_JAM;
 
 #define EEPROM_SIZE 512
 
+/*
 // Alamat EEPROM untuk tiap variabel
 #define ADDR_TEXT       0
 #define ADDR_BRIGHTNESS 110
@@ -120,6 +121,27 @@ Show show = ANIM_JAM;
 #define ADDR_PASSWORD   150
 #define ADDR_DURASIADZAN  174
 #define ADDR_CORRECTION   176
+*/
+#define EEPROM_SIZE       512
+
+// Alamat EEPROM
+#define ADDR_TEXT1        0     // text1, max 100 bytes
+#define ADDR_TEXT2       100   // text2, max 100 bytes
+#define ADDR_BRIGHTNESS  200
+#define ADDR_SPEEDTX1    202
+#define ADDR_SPEEDTX2    204   // Tambahan untuk speed text 2
+#define ADDR_SPEEDDT     206
+#define ADDR_LATITUDE    208
+#define ADDR_LONGITUDE   212
+#define ADDR_TZ          216
+#define ADDR_ALTITUDE    218
+#define ADDR_IQOMAH      220  // 6 byte
+#define ADDR_BLINK       226  // 6 byte
+#define ADDR_IHTY        232  // 6 byte
+#define ADDR_BUZZER      238
+#define ADDR_PASSWORD    240  // 8 byte
+#define ADDR_DURASIADZAN 248
+#define ADDR_CORRECTION  250
 
 
 void saveStringToEEPROM(int startAddr, String data, int maxLength) {
@@ -179,12 +201,19 @@ void handleSetTime() {
     getData(data);
     server.send(200, "text/plain", "Kecepatan kalender berhasil diupdate");
   }
-  if (server.hasArg("Sptx")) {
-    data = server.arg("Sptx"); // Atur kecepatan text
-    data = "Sptx=" + data;
+  if (server.hasArg("Sptx1")) {
+    data = server.arg("Sptx1"); // Atur kecepatan text
+    data = "Sptx1=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "Kecepatan nama berhasil diupdate");
+    server.send(200, "text/plain", "Kecepatan nama 1 berhasil diupdate");
+  }
+  if (server.hasArg("Sptx2")) {
+    data = server.arg("Sptx2"); // Atur kecepatan text
+    data = "Sptx2=" + data;
+    Serial.println(data);
+    getData(data);
+    server.send(200, "text/plain", "Kecepatan nama 2 berhasil diupdate");
   }
   if (server.hasArg("Iq")) {
     data = server.arg("Iq"); // Atur koreksi iqomah
@@ -410,13 +439,33 @@ void getData(String input) {
       }
     }
 
-    else if (key == "text") {
+    /*else if (key == "text") {
       value = value.substring(0, 100); // Batasi 100 karakter
       value.toCharArray(text, value.length() + 1);
       saveStringToEEPROM(ADDR_TEXT, value, 100);
       delay(500);
       ESP.restart();
+    }*/
+    else if (key == "text") {
+      int separatorIndex = value.indexOf('-');
+      if (separatorIndex != -1) {
+        int indexText = value.substring(0, separatorIndex).toInt();
+        String pesan = value.substring(separatorIndex + 1);
+
+        if (pesan.length() > 100) pesan = pesan.substring(0, 100);
+
+        if (indexText == 1) {
+          pesan.toCharArray(text1, 101);
+          saveStringToEEPROM(ADDR_TEXT1, String(text1), 100);
+        } else if (indexText == 2) {
+          pesan.toCharArray(text2, 101);
+          saveStringToEEPROM(ADDR_TEXT2, String(text2), 100);
+        }
+      }
+      delay(500);
+      ESP.restart();
     }
+
 
     else if (key == "Br") {
       brightness = map(value.toInt(), 0, 100, 10, 255);
@@ -424,9 +473,14 @@ void getData(String input) {
       saveIntToEEPROM(ADDR_BRIGHTNESS, brightness);
     }
 
-    else if (key == "Sptx") {
+    else if (key == "Sptx1") {
       speedText1 = map(value.toInt(), 0, 100, 10, 80);
-      saveIntToEEPROM(ADDR_SPEEDTX, speedText1);
+      saveIntToEEPROM(ADDR_SPEEDTX1, speedText1);
+    }
+
+    else if (key == "Sptx2") {
+      speedText2 = map(value.toInt(), 0, 100, 10, 80);
+      saveIntToEEPROM(ADDR_SPEEDTX2, speedText2);
     }
 
     else if (key == "Spdt") {
@@ -515,22 +569,39 @@ void getData(String input) {
 
 void loadFromEEPROM() {
   Serial.println("=== Membaca Data dari EEPROM ===");
-
+  /*
   // Baca text
   for (int i = 0; i < 100; i++) {
     text[i] = EEPROM.read(ADDR_TEXT + i);
     if (text[i] == 0) break;
+  }*/
+  
+
+  for (int i = 0; i < 100; i++) {
+    text1[i] = EEPROM.read(ADDR_TEXT1 + i);
+    if (text1[i] == 0) break;
   }
-  Serial.print("Text: ");
-  Serial.println(text);
+  Serial.print("Text1: ");
+  Serial.println(text1);
+  
+  for (int i = 0; i < 100; i++) {
+    text2[i] = EEPROM.read(ADDR_TEXT2 + i);
+    if (text2[i] == 0) break;
+  }
+  Serial.print("Text2: ");
+  Serial.println(text2);
 
   brightness = EEPROM.read(ADDR_BRIGHTNESS);
   Serial.print("Brightness: ");
   Serial.println(brightness);
 
-  speedText1 = EEPROM.read(ADDR_SPEEDTX);
-  Serial.print("Speed Text: ");
+  speedText1 = EEPROM.read(ADDR_SPEEDTX1);
+  Serial.print("Speed Text1: ");
   Serial.println(speedText1);
+
+  speedText2 = EEPROM.read(ADDR_SPEEDTX2);
+  Serial.print("Speed Text2: ");
+  Serial.println(speedText2);
 
   speedDate = EEPROM.read(ADDR_SPEEDDT);
   Serial.print("Speed Date: ");

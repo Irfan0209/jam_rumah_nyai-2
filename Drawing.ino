@@ -126,7 +126,7 @@ void runningTextInfo() {
   // Hitung panjang teks hanya sekali
   static uint16_t fullScroll = 0;
   if (fullScroll == 0) { 
-    fullScroll = Disp.textWidth(text) + Disp.width() + 250;
+    fullScroll = Disp.textWidth(text1) + Disp.width() + 250;
   }
 
   // Jalankan animasi scrolling berdasarkan millis()
@@ -135,7 +135,7 @@ void runningTextInfo() {
     fType(0);
     
     int posX = Disp.width() - x;
-    if (posX < -Disp.textWidth(text)) { // Cegah teks keluar layar
+    if (posX < -Disp.textWidth(text1)) { // Cegah teks keluar layar
       x = 0;
       flagAnim = true;
       fullScroll=0;
@@ -143,7 +143,7 @@ void runningTextInfo() {
       return;
     }
 
-    Disp.drawText(posX, 9, text);
+    Disp.drawText(posX, 9, text1);
     x++; // Geser teks ke kiri
   }
 }
