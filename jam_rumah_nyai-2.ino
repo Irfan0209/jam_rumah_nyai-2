@@ -170,7 +170,7 @@ void saveIntToEEPROM(int addr, int16_t value) {
 // Fungsi untuk mengatur jam, tanggal, running text, dan kecerahan
 void handleSetTime() {
   Serial.println("hansle run");
- 
+  Buzzer(1);
   String data;
   if (server.hasArg("Tm")) {
     data = server.arg("Tm");
@@ -184,7 +184,7 @@ void handleSetTime() {
     data = "text=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "Settingan nama berhasil diupdate");
+    server.send(200, "text/plain", "Settingan text berhasil diupdate");
   }
   
   if (server.hasArg("Br")) {
@@ -298,6 +298,7 @@ void handleSetTime() {
       server.send(200, "text/plain", "Password WiFi diupdate");
     } 
   data="";
+  Buzzer(0);
   }
   
 //=============================================================//
@@ -335,6 +336,7 @@ void AP_init() {
   WiFi.softAP(ssid,password);
   WiFi.setSleepMode(WIFI_NONE_SLEEP); // Pastikan WiFi tidak sleep
 
+  delay(1000);
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
@@ -348,7 +350,7 @@ void AP_init() {
 
 
 void setup() {
-  //Serial.begin(115200);
+  Serial.begin(115200);
   EEPROM.begin(EEPROM_SIZE);
   
   pinMode(BUZZ, OUTPUT); 
@@ -372,7 +374,7 @@ void setup() {
   Rtc.Enable32kHzPin(false);
   Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
   loadFromEEPROM();
-  delay(100);
+  delay(1000);
   Disp_init_esp();
   AP_init();
   
@@ -462,6 +464,7 @@ void getData(String input) {
           saveStringToEEPROM(ADDR_TEXT2, String(text2), 100);
         }
       }
+      Buzzer(1);
       delay(500);
       ESP.restart();
     }
@@ -557,6 +560,7 @@ void getData(String input) {
         value.toCharArray(password, value.length() + 1);
         saveStringToEEPROM(ADDR_PASSWORD, value, 8);
         server.send(200, "text/plain", "Password WiFi diupdate");
+        Buzzer(1);
         delay(500);
         ESP.restart();
       }
