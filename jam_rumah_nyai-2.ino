@@ -170,21 +170,21 @@ void saveIntToEEPROM(int addr, int16_t value) {
 // Fungsi untuk mengatur jam, tanggal, running text, dan kecerahan
 void handleSetTime() {
   Serial.println("hansle run");
-  Buzzer(1);
+  //Buzzer(1);
   String data;
   if (server.hasArg("Tm")) {
     data = server.arg("Tm");
     data = "Tm=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "Settingan jam berhasil diupdate");
+    server.send(200, "text/plain", "OK");//"Settingan jam berhasil diupdate");
   }
   if (server.hasArg("text")) {
     data = server.arg("text");
     data = "text=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "Settingan text berhasil diupdate");
+    server.send(200, "text/plain", "OK");//"Settingan text berhasil diupdate");
   }
   
   if (server.hasArg("Br")) {
@@ -192,91 +192,91 @@ void handleSetTime() {
     data = "Br=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "Kecerahan berhasil diupdate");
+    server.send(200, "text/plain", "OK");//"Kecerahan berhasil diupdate");
   }
   if (server.hasArg("Spdt")) {
     data = server.arg("Spdt"); // Atur kecepatan date
     data = "Spdt=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "Kecepatan kalender berhasil diupdate");
+    server.send(200, "text/plain", "OK");//"Kecepatan kalender berhasil diupdate");
   }
   if (server.hasArg("Sptx1")) {
     data = server.arg("Sptx1"); // Atur kecepatan text
     data = "Sptx1=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "Kecepatan nama 1 berhasil diupdate");
+    server.send(200, "text/plain", "OK");//"Kecepatan nama 1 berhasil diupdate");
   }
   if (server.hasArg("Sptx2")) {
     data = server.arg("Sptx2"); // Atur kecepatan text
     data = "Sptx2=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "Kecepatan nama 2 berhasil diupdate");
+    server.send(200, "text/plain", "OK");//"Kecepatan nama 2 berhasil diupdate");
   }
   if (server.hasArg("Iq")) {
     data = server.arg("Iq"); // Atur koreksi iqomah
     data = "Iq=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "iqomah diupdate");
+    server.send(200, "text/plain", "OK");//"iqomah diupdate");
   }
   if (server.hasArg("Dy")) {
     data = server.arg("Dy"); // Atur durasi adzan
     data = "Dy=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "displayBlink diupdate");
+    server.send(200, "text/plain", "OK");//"displayBlink diupdate");
   }
   if (server.hasArg("Kr")) {
     data = server.arg("Kr"); // Atur koreksi waktu jadwal sholat
     data = "Kr=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "Selisih jadwal sholat diupdate");
+    server.send(200, "text/plain", "OK");//"Selisih jadwal sholat diupdate");
   }
   if (server.hasArg("Lt")) {
     data = server.arg("Lt"); // Atur latitude
     data = "Lt=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "latitude diupdate");
+    server.send(200, "text/plain", "OK");//"latitude diupdate");
   }
   if (server.hasArg("Lo")) {
     data = server.arg("Lo"); // Atur latitude
     data = "Lo=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "longitude diupdate");
+    server.send(200, "text/plain", "OK");//"longitude diupdate");
   }
   if (server.hasArg("Tz")) {
     data = server.arg("Tz"); // Atur latitude
     data = "Tz=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "timezone diupdate");
+    server.send(200, "text/plain", "OK");//"timezone diupdate");
   }
   if (server.hasArg("Al")) {
     data = server.arg("Al"); // Atur latitude
     data = "Al=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "altitude diupdate");
+    server.send(200, "text/plain", "OK");//"altitude diupdate");
   }
   if (server.hasArg("Da")) { 
     data = server.arg("Da"); 
     data = "Da=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "durasi adzan diupdate");
+    server.send(200, "text/plain", "OK");// "durasi adzan diupdate");
   }
   if (server.hasArg("CoHi")) {
     data = server.arg("CoHi"); // Atur latitude
     data = "CoHi=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", "coreksi hijriah diupdate");
+    server.send(200, "text/plain", "OK");//"coreksi hijriah diupdate");
   }
 
   if (server.hasArg("Bzr")) {
@@ -284,7 +284,7 @@ void handleSetTime() {
     data = "Bzr=" + data;
     Serial.println(data);
     getData(data);
-    server.send(200, "text/plain", (stateBuzzer) ? "Suara Diaktifkan" : "Suara Dimatikan");
+    server.send(200, "text/plain","OK");// (stateBuzzer) ? "Suara Diaktifkan" : "Suara Dimatikan");
   }
   if (server.hasArg("status")) {
     server.send(200, "text/plain", "CONNECTED");
@@ -295,10 +295,10 @@ void handleSetTime() {
       data = "newPassword=" + data;
       Serial.println(data);
       getData(data);
-      server.send(200, "text/plain", "Password WiFi diupdate");
+      server.send(200, "text/plain","OK");// "Password WiFi diupdate");
     } 
   data="";
-  Buzzer(0);
+  //Buzzer(0);
   }
   
 //=============================================================//
@@ -350,7 +350,7 @@ void AP_init() {
 
 
 void setup() {
-  Serial.begin(115200);
+  //Serial.begin(115200);
   EEPROM.begin(EEPROM_SIZE);
   
   pinMode(BUZZ, OUTPUT); 
