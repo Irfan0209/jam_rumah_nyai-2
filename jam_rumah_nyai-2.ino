@@ -16,7 +16,7 @@ DMDESP  Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  // Jumlah Panel P10 yang digunakan 
 // Pengaturan hotspot WiFi dari ESP8266
 char ssid[20]     = "JAM_PANEL_2";
 char password[20] = "00000000";
-const char* host = "OTA-PANEL";
+//const char* host = "OTA-PANEL";
 ESP8266WebServer server(80);
 
 #include <Wire.h>
@@ -341,7 +341,7 @@ void AP_init() {
   Serial.print("AP IP address: ");
   Serial.println(myIP);
 
-  server.on("/setTime", handleSetTime);
+  server.on("/setPanel", handleSetTime);
   server.begin();
   
   Serial.println("Server dimulai.");  
