@@ -4,7 +4,7 @@ void islam() {
   RtcDateTime now = Rtc.GetDateTime();
   
   if(now.Hour() == 00 && now.Minute() == 00 && now.Second() == 00){
-    stateBuzz = 1;
+    stateBuzzWar = 1;
   }
 
   JWS.Update(config.zonawaktu, config.latitude, config.longitude, config.altitude, now.Year(), now.Month(), now.Day()); // Jalankan fungsi ini untuk update jadwal sholat
