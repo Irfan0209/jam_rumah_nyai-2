@@ -7,8 +7,14 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-//#include <ESP8266mDNS.h>
-
+//////////
+#include <ESP8266mDNS.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
+//#include <WiFiManager.h>
+//
+//WiFiManager wm; // global wm instance
+//////////
 #include <DMDESP.h>
 #include <ESP_EEPROM.h>
 DMDESP  Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  // Jumlah Panel P10 yang digunakan (KOLOM,BARIS)
@@ -17,6 +23,12 @@ DMDESP  Disp(DISPLAYS_WIDE, DISPLAYS_HIGH);  // Jumlah Panel P10 yang digunakan 
 char ssid[20]     = "JAM_PANEL_2";
 char password[20] = "00000000";
 //const char* host = "OTA-PANEL";
+#ifndef STASSID
+#define STASSID "KELUARGA02"
+#define STAPSK "mawarmerah"
+#endif
+const char* idwifi = STASSID;
+const char* passwifi = STAPSK;
 ESP8266WebServer server(80);
 
 #include <Wire.h>
@@ -85,7 +97,8 @@ float      dataFloat[10];
 int        dataInteger[10];
 uint8_t    indexText;
 uint8_t    list,lastList;
-//bool MODE=false;
+bool       stateMode       = 0;
+bool       stateBuzz       = 0;
 /*============== end ================*/
 
 enum Show{
@@ -96,7 +109,7 @@ enum Show{
   ANIM_ADZAN,
   ANIM_IQOMAH,
   ANIM_BLINK,
-  //ANIM_ZONK
+  UPLOAD
 };
 
 Show show = ANIM_JAM;
@@ -142,6 +155,7 @@ Show show = ANIM_JAM;
 #define ADDR_PASSWORD    240  // 8 byte
 #define ADDR_DURASIADZAN 248
 #define ADDR_CORRECTION  250
+#define ADDR_MODE        256
 
 
 void saveStringToEEPROM(int startAddr, String data, int maxLength) {
@@ -286,6 +300,13 @@ void handleSetTime() {
     getData(data);
     server.send(200, "text/plain","OK");// (stateBuzzer) ? "Suara Diaktifkan" : "Suara Dimatikan");
   }
+  if (server.hasArg("mode")) {
+    data = server.arg("mode"); // Atur status buzzer
+    data = "mode=" + data;
+    Serial.println(data);
+    getData(data);
+    server.send(200, "text/plain","OK");// (stateBuzzer) ? "Suara Diaktifkan" : "Suara Dimatikan");
+  }
   if (server.hasArg("status")) {
     server.send(200, "text/plain", "CONNECTED");
   }
@@ -347,13 +368,68 @@ void AP_init() {
   Serial.println("Server dimulai.");  
 }
 
+void ONLINE(){
 
+ WiFi.mode(WIFI_STA);
+ WiFi.softAPConfig(local_IP, gateway, subnet);
+ WiFi.begin(idwifi,passwifi);
+ while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    Serial.println("Connection Failed! Rebooting...");
+    delay(5000);
+    ESP.restart();
+  }
+
+  server.on("/setPanel", handleSetTime);
+  server.begin();
+  
+  Serial.println("Server dimulai."); 
+    
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else {  // U_FS
+      type = "filesystem";
+    }
+
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+    stateMode = 0;
+    EEPROM.write(ADDR_MODE, stateMode);
+    EEPROM.commit();
+    delay(1000);
+    ESP.restart();
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+  ArduinoOTA.begin();
+}
 
 void setup() {
-  //Serial.begin(115200);
+  Serial.begin(115200);
   EEPROM.begin(EEPROM_SIZE);
   
   pinMode(BUZZ, OUTPUT); 
+  digitalWrite(BUZZ,LOW);
+  delay(200);
   digitalWrite(BUZZ,HIGH);
   int rtn = I2C_ClearBus(); // clear the I2C bus first before calling Wire.begin()
     if (rtn != 0) {
@@ -375,9 +451,15 @@ void setup() {
   Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
   loadFromEEPROM();
   delay(1000);
-  Disp_init_esp();
-  AP_init();
+  if(stateMode){
+    show = UPLOAD;
+    ONLINE();
+  }else{
+    Disp_init_esp();
+    AP_init();
+  }
   
+  delay(1000);
 for(int i = 0; i < 4; i++)
  {
       Buzzer(1);
@@ -390,7 +472,8 @@ for(int i = 0; i < 4; i++)
 
 void loop() {
   
-  server.handleClient();
+  if(stateMode == 1) {ArduinoOTA.handle(); }
+  else{server.handleClient();}
   check();
   islam();
   
@@ -412,8 +495,12 @@ void loop() {
     case ANIM_ADZAN :
       drawAzzan();
     break;
+
+    case UPLOAD :
+      buzzerUpload(1);
+    break;
   };
-  buzzerWarning();
+  buzzerWarning(stateBuzz);
   yield();
 }
 
@@ -555,6 +642,13 @@ void getData(String input) {
       EEPROM.write(ADDR_BUZZER, stateBuzzer);
     }
 
+    else if (key == "mode") {
+      stateMode = value.toInt();
+      EEPROM.write(ADDR_MODE, stateMode);
+      delay(1000);
+      ESP.restart();
+    }
+
     else if (key == "newPassword") {
       if (value.length() == 8) {
         value.toCharArray(password, value.length() + 1);
@@ -666,6 +760,10 @@ void loadFromEEPROM() {
   stateBuzzer = EEPROM.read(ADDR_BUZZER);
   Serial.print("Buzzer: ");
   Serial.println(stateBuzzer);
+
+  stateMode = EEPROM.read(ADDR_MODE);
+  Serial.print("mode: ");
+  Serial.println(stateMode);
 
   for (int i = 0; i < 8; i++) {
     password[i] = EEPROM.read(ADDR_PASSWORD + i);
@@ -872,20 +970,38 @@ int I2C_ClearBus() {
   return 0; // all ok
 }
 
-void buzzerWarning(){
+void buzzerUpload(bool cek){
 
-   RtcDateTime now = Rtc.GetDateTime();
-   if(now.Hour() == 00 && now.Minute() == 00 && now.Second() <= 15){
     static bool state;
     static uint32_t save = 0;
+    static uint8_t  con = 0;
     uint32_t tmr = millis();
-
-    if(tmr - save > 2500){
+    
+    if(tmr - save > 1000 ){
       save = tmr;
       state = !state;
       digitalWrite(BUZZ, state);
-    }  
-   }
+      
+    }
+}
+
+void buzzerWarning(int cek){
+
+   static bool state = false;
+   static uint32_t save = 0;
+   uint32_t tmr = millis();
+   static uint8_t con = 0;
+    
+    if(tmr - save > 2500 && cek == 1){
+      save = tmr;
+      state = !state;
+      digitalWrite(BUZZ, state);
+      //Serial.println("active");
+      if(con <= 6) { con++; }
+      if(con == 7) { cek = 0; con = 0; state = false; stateBuzz = 0; }
+      Serial.println("con:" + String(con));
+    } 
+    
 }
 
 void Buzzer(uint8_t state)
